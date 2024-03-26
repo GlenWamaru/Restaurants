@@ -1,9 +1,6 @@
 import sqlite3
-from restaurant import Restaurant
-from customer import Customer
-from review import Review
 
-class RestaurantDB:
+class Restaurant_db:
     def __init__(self, db_name):
         self.db_name = db_name
         self.connection = None
@@ -12,8 +9,7 @@ class RestaurantDB:
         self.connection = sqlite3.connect(self.db_name)
 
     def disconnect(self):
-        if self.connection:
-            self.connection.close()
+        self.connection.close()
 
     def create_tables(self):
         self.connect()
@@ -91,20 +87,20 @@ class RestaurantDB:
 
         return result
 
-    def add_review(self, restaurant_id, customer_id, rating):
+    def add_review(self, restaurant, customer_id, rating):
         self.connect()
         self.cursor = self.connection.cursor()
 
-        self.cursor.execute("INSERT INTO reviews (restaurant_id, customer_id, rating) VALUES (?, ?, ?)", (restaurant_id, customer_id, rating))
+        self.cursor.execute("INSERT INTO reviews (restaurant_id, customer_id, rating) VALUES (?, ?, ?)", (restaurant.id, customer_id, rating))
 
         self.connection.commit()
         self.disconnect()
 
-    def get_reviews(self, restaurant_id):
+    def get_reviews(self, restaurant):
         self.connect()
         self.cursor = self.connection.cursor()
 
-        self.cursor.execute("SELECT * FROM reviews WHERE restaurant_id = ?", (restaurant_id,))
+        self.cursor.execute("SELECT * FROM reviews WHERE restaurant_id = ?", (restaurant.id,))
 
         results = self.cursor.fetchall()
 
@@ -112,23 +108,19 @@ class RestaurantDB:
 
         return results
 
-    def get_restaurants_for_customer(self, customer_id):
+    def get_restaurants_for_customer(self, customer):
         self.connect()
         self.cursor = self.connection.cursor()
 
-        self.cursor.execute("SELECT r.* FROM restaurants r INNER JOIN reviews rev ON r.id = rev.restaurant_id WHERE rev.customer_id = ?", (customer_id,))
+        self.cursor.execute("""
+            SELECT DISTINCT r.*
+            FROM restaurants r
+            JOIN reviews rev ON r.id = rev.restaurant_id
+            WHERE rev.customer_id = ?
+        """, (customer.id,))
 
         results = self.cursor.fetchall()
 
         self.disconnect()
 
         return results
-
-    def delete_reviews(self, customer_id, restaurant_id):
-        self.connect()
-        self.cursor = self.connection.cursor()
-
-        self.cursor.execute("DELETE FROM reviews WHERE customer_id = ? AND restaurant_id = ?", (customer_id, restaurant_id))
-
-        self.connection.commit()
-        self.disconnect()

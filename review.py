@@ -26,4 +26,4 @@ class Review:
     def full_review(self, db):
         customer = self.customer(db)
         restaurant = self.restaurant(db)
-        return f"Review for {restaurant.name} by {customer.first_name} {customer.last_name}: {self.star_rating} stars."
+        return f"Review for {restaurant['name']} by {customer['first_name']} {customer['last_name']}: {self.star_rating} stars."
